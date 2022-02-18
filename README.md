@@ -208,7 +208,7 @@ results it’d be best to not use only *one* single generation technique, but
 layer *multiple* on top of each other, also known as a hybrid approach to the
 situation.
 
-![](media/5d9f6167bdac4b0c2a6c40205ccfc801.jpeg)Ivanov et al. (2020) pointed out
+![](media/5d9f6167bdac4b0c2a6c40205ccfc801.jpg)Ivanov et al. (2020) pointed out
 in **An Explorative Design Process for Game Map Generation Based on Satellite
 Images and Playability Factors** that even though procedural generation has the
 potential to generate large space of unique solutions for game content, it still
