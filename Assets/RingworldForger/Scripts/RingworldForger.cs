@@ -18,7 +18,7 @@ namespace ChironPE
         public RingLayer ocean = new RingLayer();
         public float oceanHeight = 5;
 
-        [Header("Continental Curst")]
+        [Header("Continental Crust")]
         public RingLayer continent = new RingLayer();
         [SerializeField]
         private Vector2 continentPerlinOffset = Vector2.one * 0.3f;
@@ -306,6 +306,10 @@ namespace ChironPE
                 ring = gameObject.AddComponent<Ringworld>();
             }
             ring.spinningSpeed = spinningSpeed;
+            ring.radius = radius;
+            ring.width = width;
+            ring.UpdateBounds();
+
             enabled = false;
         }
 
