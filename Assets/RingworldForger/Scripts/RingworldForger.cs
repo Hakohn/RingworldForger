@@ -31,8 +31,6 @@ namespace ChironPE
         [SerializeField]
         private bool generateCollider = false;
 
-        public Vector3 Centre => transform.TransformPoint(width / 2, radius, 0);
-
         private void Start()
         {
             // Outer Ring
@@ -45,7 +43,7 @@ namespace ChironPE
                 outer.renderer.materials = materialPalette.outer;
                 outer.filter.mesh = outer.mesh;
                 outer.renderer.transform.parent = transform;
-                outer.renderer.transform.localPosition = new Vector3(0, -radius, 0);
+                outer.renderer.transform.localPosition = Vector3.zero;
             }
 
             // Ocean
@@ -58,7 +56,7 @@ namespace ChironPE
                 ocean.renderer.materials = materialPalette.ocean;
                 ocean.filter.mesh = ocean.mesh;
                 ocean.renderer.transform.parent = transform;
-                ocean.renderer.transform.localPosition = new Vector3(0, -radius, 0);
+                ocean.renderer.transform.localPosition = Vector3.zero;
             }
 
             // Continental Crust
@@ -71,7 +69,7 @@ namespace ChironPE
                 continent.renderer.materials = materialPalette.continent;
                 continent.filter.mesh = continent.mesh;
                 continent.renderer.transform.parent = transform;
-                continent.renderer.transform.localPosition = new Vector3(0, -radius, 0);
+                continent.renderer.transform.localPosition = Vector3.zero;
             }
 
             CreateShape();
@@ -80,16 +78,19 @@ namespace ChironPE
 
         private void OnValidate()
         {
+            if (outer == null) outer = new RingLayer();
             if (outer.mesh != null)
             {
                 outer.mesh.name = gameObject.name + " Outer Ring Mesh";
                 outer.renderer.materials = materialPalette.outer;
             }
+            if (ocean == null) ocean = new RingLayer();
             if (ocean.mesh != null)
             {
                 ocean.mesh.name = gameObject.name + " Ocean Mesh";
                 ocean.renderer.materials = materialPalette.ocean;
             }
+            if (continent == null) continent = new RingLayer();
             if (continent.mesh != null)
             {
                 continent.mesh.name = gameObject.name + " Continent Mesh";
@@ -101,15 +102,12 @@ namespace ChironPE
 
             outer.widthSubdivisions = Mathf.Clamp(outer.widthSubdivisions, 2, outer.widthSubdivisions);
             outer.lengthSubdivisions = Mathf.Clamp(outer.lengthSubdivisions, 5, outer.lengthSubdivisions);
-            outer.renderer.transform.localPosition = new Vector3(0, -radius, 0);
 
             ocean.widthSubdivisions = Mathf.Clamp(ocean.widthSubdivisions, 2, ocean.widthSubdivisions);
             ocean.lengthSubdivisions = Mathf.Clamp(ocean.lengthSubdivisions, 5, ocean.lengthSubdivisions);
-            ocean.renderer.transform.localPosition = new Vector3(0, -radius, 0);
 
             continent.widthSubdivisions = Mathf.Clamp(continent.widthSubdivisions, 2, continent.widthSubdivisions);
             continent.lengthSubdivisions = Mathf.Clamp(continent.lengthSubdivisions, 5, continent.lengthSubdivisions);
-            continent.renderer.transform.localPosition = new Vector3(0, -radius, 0);
 
             CreateShape();
             UpdateMesh();
@@ -119,6 +117,8 @@ namespace ChironPE
         {
             int vertIndex, triIndex;
 
+            Vector3 localCentre = new Vector3(- width / 2, 0, 0);
+
             #region Outer Ring
             // Generating the vertices.
             outer.verts = new Vector3[outer.widthSubdivisions * outer.lengthSubdivisions];
@@ -127,11 +127,11 @@ namespace ChironPE
             {
                 for(int x = 0; x < outer.widthSubdivisions; x++)
                 {
-                    outer.verts[z * outer.widthSubdivisions + x] = new Vector3(
-                        x * (width / (outer.widthSubdivisions - 1)),
-                        Centre.y + radius * Mathf.Cos(360f / (outer.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
-                        Centre.z + radius * Mathf.Sin(360f / (outer.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
-                    );
+                    outer.verts[z * outer.widthSubdivisions + x] = (new Vector3(
+                        localCentre.x + x * (width / (outer.widthSubdivisions - 1)),
+                        localCentre.y + radius * Mathf.Cos(360f / (outer.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
+                        localCentre.z + radius * Mathf.Sin(360f / (outer.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
+                    ));
                 }
             }
 
@@ -167,11 +167,11 @@ namespace ChironPE
                 for (int x = 0; x < ocean.widthSubdivisions; x++)
                 {
                     float y = (radius - oceanHeight);
-                    ocean.verts[z * ocean.widthSubdivisions + x] = new Vector3(
-                        x * (width / (ocean.widthSubdivisions - 1)),
-                        Centre.y + y * Mathf.Cos(360f / (ocean.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
-                        Centre.z + (radius - oceanHeight) * Mathf.Sin(360f / (ocean.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
-                    );
+                    ocean.verts[z * ocean.widthSubdivisions + x] = (new Vector3(
+                        localCentre.x + x * (width / (ocean.widthSubdivisions - 1)),
+                        localCentre.y + y * Mathf.Cos(360f / (ocean.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
+                        localCentre.z + (radius - oceanHeight) * Mathf.Sin(360f / (ocean.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
+                    ));
                 }
             }
 
@@ -208,11 +208,11 @@ namespace ChironPE
                 for (int x = 0; x < continent.widthSubdivisions; x++)
                 {
                     float y = continentMinHeight + Mathf.PerlinNoise(x * continentPerlinOffset.x, z * continentPerlinOffset.y) * continentMaxHeight;
-                    continent.verts[z * continent.widthSubdivisions + x] = new Vector3(
-                        x * (width / (continent.widthSubdivisions - 1)),
-                        Centre.y + (radius - y) * Mathf.Cos(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
-                        Centre.z + (radius - y) * Mathf.Sin(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
-                    );
+                    continent.verts[z * continent.widthSubdivisions + x] = (new Vector3(
+                        localCentre.x + x * (width / (continent.widthSubdivisions - 1)),
+                        localCentre.y + (radius - y) * Mathf.Cos(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
+                        localCentre.z + (radius - y) * Mathf.Sin(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
+                    ));
                 }
             }
 

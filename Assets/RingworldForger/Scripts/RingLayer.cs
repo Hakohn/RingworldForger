@@ -1,40 +1,43 @@
 using System;
 using UnityEngine;
 
-[Serializable]
-public class RingLayer
+namespace ChironPE
 {
-    public int widthSubdivisions = 2;
-    public int lengthSubdivisions = 100;
-    public float textureScale = 0.1f;
-    [HideInInspector]
-    public Mesh mesh = null;
-    [HideInInspector]
-    public MeshFilter filter = null;
-    [HideInInspector]
-    public MeshRenderer renderer = null;
-    [HideInInspector]
-    public Vector3[] verts = null;
-    [HideInInspector]
-    public int[] tris = null;
-    [HideInInspector]
-    public Vector2[] uv = null;
-
-    public void RecalculateUVs()
+    [Serializable]
+    public class RingLayer
     {
-        uv = new Vector2[widthSubdivisions * lengthSubdivisions];
+        public int widthSubdivisions = 2;
+        public int lengthSubdivisions = 100;
+        public float textureScale = 0.1f;
+        [HideInInspector]
+        public Mesh mesh = null;
+        [HideInInspector]
+        public MeshFilter filter = null;
+        [HideInInspector]
+        public MeshRenderer renderer = null;
+        [HideInInspector]
+        public Vector3[] verts = null;
+        [HideInInspector]
+        public int[] tris = null;
+        [HideInInspector]
+        public Vector2[] uv = null;
 
-        float lenToWidthScale = lengthSubdivisions / widthSubdivisions;
-        float fTextureS = widthSubdivisions * textureScale;
-        float fTextureT = lengthSubdivisions * textureScale * lenToWidthScale;
-        for (int z = 0; z < lengthSubdivisions; z++)
+        public void RecalculateUVs()
         {
-            for (int x = 0; x < widthSubdivisions; x++)
+            uv = new Vector2[widthSubdivisions * lengthSubdivisions];
+
+            float lenToWidthScale = lengthSubdivisions / widthSubdivisions;
+            float fTextureS = widthSubdivisions * textureScale;
+            float fTextureT = lengthSubdivisions * textureScale * lenToWidthScale;
+            for (int z = 0; z < lengthSubdivisions; z++)
             {
-                int i = z * widthSubdivisions + x;
-                float fScaleC = (float)x / (widthSubdivisions - 1);
-                float fScaleR = (float)z / (lengthSubdivisions - 1);
-                uv[i] = new Vector2(fTextureS * fScaleC, fTextureT * fScaleR);
+                for (int x = 0; x < widthSubdivisions; x++)
+                {
+                    int i = z * widthSubdivisions + x;
+                    float fScaleC = (float)x / (widthSubdivisions - 1);
+                    float fScaleR = (float)z / (lengthSubdivisions - 1);
+                    uv[i] = new Vector2(fTextureS * fScaleC, fTextureT * fScaleR);
+                }
             }
         }
     }

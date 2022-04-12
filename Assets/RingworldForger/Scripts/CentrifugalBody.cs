@@ -1,6 +1,3 @@
-using ChironPE.Events;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace ChironPE
@@ -10,11 +7,7 @@ namespace ChironPE
     {
         [HideInInspector]
         public Rigidbody rb = null;
-
-        public bool alignUpToRingCentre = false;
-        //[HideInInspector]
-        //public Ringworld parentRingworld = null;
-
+        private Ringworld rg = null;
 
         private void Awake()
         {
@@ -24,16 +17,62 @@ namespace ChironPE
 
         private void FixedUpdate()
         {
-            //Vector3 centrifugalForce = rb.mass * ((rb.velocity.magnitude * rb.velocity.magnitude)/())
-            //rb.AddForce
+            // If centrifugal force is available, it will be calculated accordingly.
+            if (rg != null)
+            {
+                // Is the object within the ring?
+                Vector3 localRgCentre = Vector3.zero;
+                Vector3 flatLocalPos = rg.transform.InverseTransformPoint(transform.position);
+                flatLocalPos.x = 0;
+                float flatDistToCentre = (localRgCentre - flatLocalPos).magnitude;
+                Vector3 flatDirToCentre = (localRgCentre - flatLocalPos).normalized;
+                flatDirToCentre = rg.transform.TransformDirection(flatDirToCentre);
+
+                // Apply centrifugal force.
+                float w = rg.spinningSpeed;
+                float r = flatDistToCentre;
+                float v = w * r;
+                float m = rb.mass;
+                float G = v * v / r;
+                float F = m * G;
+                rb.AddForce(-flatDirToCentre * F, ForceMode.Force);
+
+                RotateAround(rg.Centre, rg.transform.right, rg.spinningSpeed * Time.fixedDeltaTime);
+            }
         }
 
-        private void OnTriggerEnter(Collider other)
+        // https://answers.unity.com/questions/1751620/rotating-around-a-pivot-point-using-a-quaternion.html
+        void RotateAround(Vector3 point, Vector3 axis, float angle)
         {
-            //if(other.TryGetComponent(out Ringworld ringworld))
-            //{
-            //    parentRingworld = ringworld;
-            //}
+            Quaternion rot = Quaternion.AngleAxis(angle, axis);
+            rb.MovePosition(rot * (rb.position - point) + point);
+            rb.MoveRotation(rot * rb.rotation);
+        }
+
+        private void OnRingworldEnter(Ringworld ring)
+        {
+            rg = ring;
+        }
+
+        private void OnRingworldExit(Ringworld ring)
+        {
+            rg = null;
+        }
+
+        private void OnDrawGizmos()
+        {
+            if(rg != null)
+            {
+                Gizmos.color = Color.magenta;
+                Vector3 localRgCentre = Vector3.zero;
+                Vector3 flatLocalPos = rg.transform.InverseTransformPoint(transform.position);
+                flatLocalPos.x = 0;
+                float flatDistToCentre = (localRgCentre - flatLocalPos).magnitude;
+                Vector3 flatDirToCentre = (localRgCentre - flatLocalPos).normalized;
+                flatDirToCentre = rg.transform.TransformDirection(flatDirToCentre);
+
+                Gizmos.DrawLine(rb.position, rb.position + flatDirToCentre * flatDistToCentre);
+            }
         }
     }
 }

@@ -1,14 +1,18 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ChironPE
 {
-    [RequireComponent(typeof(SphereCollider))]
+    [RequireComponent(typeof(BoxCollider))]
     public class Ringworld : MonoBehaviour
     {
         public float spinningSpeed = 10;
+        [SerializeField]
+        private float gravitationalPullAtRadius = 0;
+
 
         [HideInInspector]
-        public SphereCollider trigger = null;
+        public BoxCollider trigger = null;
 
         /// <summary> DO NOT CHANGE THE VALUE OF THIS VARIABLE. The radius of the ring, as given by RingworldForger on creation. </summary>
         [HideInInspector]
@@ -19,7 +23,8 @@ namespace ChironPE
         public float diameter { get; private set; } = 0.0f;
         public float halfWidth { get; private set; } = 0.0f;
         public Vector3 Centre => transform.position;
-        public Transform capturedObjectsParent { get; private set; } = null;
+
+        public List<GameObject> capturedGameObjects = new List<GameObject>();
 
         private void Awake()
         {
@@ -27,58 +32,74 @@ namespace ChironPE
             halfWidth = width / 2.0f;
 
             UpdateBounds();
+        }
 
-            capturedObjectsParent = new GameObject("Captured Objects").transform;
-            capturedObjectsParent.parent = transform;
+        private void OnValidate()
+        {
+            float w = spinningSpeed;
+            float r = radius;
+            float v = w * r;
+            float m = 1;
+            float G = v * v / r;
+            float F = m * G;
+
+            gravitationalPullAtRadius = -F;
         }
 
         public void UpdateBounds()
         {
-            SphereCollider trigger = GetComponent<SphereCollider>();
+            diameter = radius * 2.0f;
+            halfWidth = width / 2.0f;
+
+            trigger = GetComponent<BoxCollider>();
             trigger.isTrigger = true;
-            trigger.center = Vector3.zero;
-            trigger.radius = radius;
+            trigger.center = new Vector3(0, 0, 0);
+            trigger.size = new Vector3(width, diameter, diameter);
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
-            transform.Rotate(Vector3.right, spinningSpeed * Time.deltaTime);
+            transform.Rotate(Vector3.right, spinningSpeed * Time.fixedDeltaTime, Space.Self);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            //OnTriggerStay(other);
         }
 
         private void OnTriggerStay(Collider other)
         {
-            if(other.gameObject.TryGetComponent(out CentrifugalBody cb))
+            Vector3 localRgCentre = Vector3.zero;
+            Vector3 flatLocalPos = transform.InverseTransformPoint(other.transform.position);
+            flatLocalPos.x = 0;
+            float flatDistToCentre = (localRgCentre - flatLocalPos).magnitude;
+            //Vector3 flatDirToCentre = (localRgCentre - flatLocalPos).normalized;
+            //flatDirToCentre = transform.TransformDirection(flatDirToCentre);
+
+            if (flatDistToCentre > radius)
             {
-                if(cb.isActiveAndEnabled)
+                if (capturedGameObjects.Contains(other.gameObject))
                 {
-                    Vector3 localPosition = transform.InverseTransformPoint(cb.transform.position);
-                    // Is the object within the ring?
-                    if(Mathf.Abs(localPosition.x) <= halfWidth)
-                    {
-                        cb.transform.parent = capturedObjectsParent;
-
-                        // Calculate the distance from ring's centre.
-                        Vector3 flattenedLocalPosition = localPosition;
-                        flattenedLocalPosition.x = 0;
-                        Vector3 flattenedDirection = flattenedLocalPosition.normalized;
-
-                        // Apply centrifugal force.
-                        float w = spinningSpeed;
-                        float r = flattenedLocalPosition.magnitude;
-                        float v = w * r;
-                        float m = cb.rb.mass;
-                        float G = v * v / r;
-                        float F = m * G;
-                        cb.rb.AddForce(flattenedDirection * F, ForceMode.Acceleration);
-                        //float centrifugalTorque = cb.rb.mass * (spinningSpeed * spinningSpeed * (distanceFromCentre));
-                        //cb.rb.AddTorque(flattenedDirection * centrifugalTorque, ForceMode.Acceleration);
-
-                        if(cb.alignUpToRingCentre)
-                        {
-                            cb.transform.up = -flattenedDirection;
-                        }
-                    }
+                    other.gameObject.SendMessage("OnRingworldExit", this, SendMessageOptions.DontRequireReceiver);
+                    capturedGameObjects.Remove(other.gameObject);
                 }
+            }
+            else
+            {
+                if (!capturedGameObjects.Contains(other.gameObject))
+                {
+                    other.gameObject.SendMessage("OnRingworldEnter", this, SendMessageOptions.DontRequireReceiver);
+                    capturedGameObjects.Add(other.gameObject);
+                }
+            }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (capturedGameObjects.Contains(other.gameObject))
+            {
+                other.gameObject.SendMessage("OnRingworldExit", this, SendMessageOptions.DontRequireReceiver);
+                capturedGameObjects.Remove(other.gameObject);
             }
         }
     }
