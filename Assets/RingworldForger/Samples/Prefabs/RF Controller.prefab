@@ -219,7 +219,7 @@ MonoBehaviour:
   sprintSpeedMultiplier: 3
   tacticalSprintSpeedMultiplier: 4
   airSpeedMultiplier: 1
-  sensitivity: 600
+  sensitivity: 300
   jumpForce: 500
   groundMask:
     serializedVersion: 2
@@ -234,8 +234,8 @@ MonoBehaviour:
   cb: {fileID: 0}
   camera: {fileID: 4499139270552348049}
   offset: {x: 0.5, y: 0, z: -2}
-  maxVerticalLookAngle: 90
-  minVerticalLookAngle: -80
+  maxVerticalLookAngle: 85
+  minVerticalLookAngle: -85
   cameraLook: {fileID: 4499139270561615528}
   animator: {fileID: 8005908089540527935}
   animationLerp: 20

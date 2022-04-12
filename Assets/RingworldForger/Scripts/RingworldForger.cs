@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ChironPE
 {
-    [ExecuteAlways]
+    [ExecuteInEditMode]
     public class RingworldForger : MonoBehaviour
     {
         [Header("Ring")]
@@ -21,11 +21,7 @@ namespace ChironPE
         [Header("Continental Crust")]
         public RingLayer continent = new RingLayer();
         [SerializeField]
-        private Vector2 continentPerlinOffset = Vector2.one * 0.3f;
-        [SerializeField]
-        private float continentMinHeight = 1.0f;
-        [SerializeField]
-        private float continentMaxHeight = 20.0f;
+        private GenerationAlgorithmSO[] generationAlgorithms = new GenerationAlgorithmSO[0];
 
         [Header("On Save")]
         [SerializeField]
@@ -71,9 +67,6 @@ namespace ChironPE
                 continent.renderer.transform.parent = transform;
                 continent.renderer.transform.localPosition = Vector3.zero;
             }
-
-            CreateShape();
-            UpdateMesh();
         }
 
         private void OnValidate()
@@ -108,9 +101,6 @@ namespace ChironPE
 
             continent.widthSubdivisions = Mathf.Clamp(continent.widthSubdivisions, 2, continent.widthSubdivisions);
             continent.lengthSubdivisions = Mathf.Clamp(continent.lengthSubdivisions, 5, continent.lengthSubdivisions);
-
-            CreateShape();
-            UpdateMesh();
         }
 
         private void CreateShape()
@@ -203,16 +193,44 @@ namespace ChironPE
             // Generating the vertices.
             continent.verts = new Vector3[continent.widthSubdivisions * continent.lengthSubdivisions];
 
-            for (int z = 0; z < continent.lengthSubdivisions; z++)
+
+            // Setting up the heightmap.
+            Vector2Int heightMapSize = new Vector2Int(continent.widthSubdivisions, continent.lengthSubdivisions);
+            float[,] heightMap = new float[heightMapSize.x, heightMapSize.y];
+            for (int x = 0; x < heightMapSize.x; x++)
             {
-                for (int x = 0; x < continent.widthSubdivisions; x++)
+                for (int z = 0; z < heightMapSize.y; z++)
                 {
-                    float y = continentMinHeight + Mathf.PerlinNoise(x * continentPerlinOffset.x, z * continentPerlinOffset.y) * continentMaxHeight;
-                    continent.verts[z * continent.widthSubdivisions + x] = (new Vector3(
+                    heightMap[x, z] = 0;
+                }
+            }
+
+            // Layering the algorithms on top of each other.
+            foreach (GenerationAlgorithmSO ga in generationAlgorithms)
+            {
+                if (ga == null) continue;
+                float[,] otherHeightMap = ga.GenerateHeightmap(heightMapSize);
+
+                for(int x = 0; x < heightMapSize.x; x++)
+                {
+                    for(int z = 0; z < heightMapSize.y; z++)
+                    {
+                        heightMap[x, z] += otherHeightMap[x, z];
+                    }
+                }
+            }
+
+            // Applying the height map.
+            for (int x = 0; x < heightMapSize.x; x++)
+            {
+                for (int z = 0; z < heightMapSize.y; z++)
+                {
+                    float h = heightMap[x, z];
+                    continent.verts[z * continent.widthSubdivisions + x] = new Vector3(
                         localCentre.x + x * (width / (continent.widthSubdivisions - 1)),
-                        localCentre.y + (radius - y) * Mathf.Cos(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
-                        localCentre.z + (radius - y) * Mathf.Sin(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
-                    ));
+                        localCentre.y + (radius - h) * Mathf.Cos(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)/* - y*/,
+                        localCentre.z + (radius - h) * Mathf.Sin(360f / (continent.lengthSubdivisions - 1) * z * Mathf.Deg2Rad)
+                    );
                 }
             }
 
@@ -320,7 +338,7 @@ namespace ChironPE
                 for(int i = 0; i < outer.verts.Length; i++)
                 {
                     Gizmos.color = Color.red;
-                    Gizmos.DrawWireSphere(outer.verts[i], 0.25f);
+                    Gizmos.DrawWireSphere(transform.TransformPoint(outer.verts[i]), 0.25f);
                 }
             }
 
@@ -329,7 +347,7 @@ namespace ChironPE
                 for (int i = 0; i < ocean.verts.Length; i++)
                 {
                     Gizmos.color = Color.yellow;
-                    Gizmos.DrawWireSphere(ocean.verts[i], 0.25f);
+                    Gizmos.DrawWireSphere(transform.TransformPoint(ocean.verts[i]), 0.25f);
                 }
             }
 
@@ -338,7 +356,7 @@ namespace ChironPE
                 for (int i = 0; i < continent.verts.Length; i++)
                 {
                     Gizmos.color = Color.cyan;
-                    Gizmos.DrawWireSphere(continent.verts[i], 0.25f);
+                    Gizmos.DrawWireSphere(transform.TransformPoint(continent.verts[i]), 0.25f);
                 }
             }
         }

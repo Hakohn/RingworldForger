@@ -37,10 +37,21 @@ namespace ChironPE.Editor
 
             RingworldForger rf = serializedObject.targetObject as RingworldForger;
 
+            if(GUILayout.Button("Preview"))
+            {
+                rf.Invoke("OnValidate", 0);
+                rf.Invoke("CreateShape", 0);
+                rf.Invoke("UpdateMesh", 0);
+
+                EditorApplication.QueuePlayerLoopUpdate();
+                SceneView.RepaintAll();
+            }
+
             if (GUILayout.Button("Create"))
             {
                 //rf.Invoke("CreateShape", 0);
                 //rf.Invoke("UpdateMesh", 0);
+                rf.Invoke("OnValidate", 0);
                 rf.Invoke("SaveAndExit", 0);
 
                 EditorApplication.QueuePlayerLoopUpdate();
