@@ -15,10 +15,10 @@ namespace ChironPE
         public BoxCollider trigger = null;
 
         /// <summary> DO NOT CHANGE THE VALUE OF THIS VARIABLE. The radius of the ring, as given by RingworldForger on creation. </summary>
-        [HideInInspector]
+        //[HideInInspector]
         public float radius = 0.0f;
         /// <summary> DO NOT CHANGE THE VALUE OF THIS VARIABLE. The radius of the ring, as given by RingworldForger on creation. </summary>
-        [HideInInspector]
+        //[HideInInspector]
         public float width = 0.0f;
         public float diameter { get; private set; } = 0.0f;
         public float halfWidth { get; private set; } = 0.0f;
