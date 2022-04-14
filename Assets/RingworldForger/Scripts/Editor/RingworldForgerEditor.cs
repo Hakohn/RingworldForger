@@ -15,9 +15,6 @@ namespace ChironPE.Editor
             GameObject rfObj = new GameObject();
             RingworldForger rf = rfObj.AddComponent<RingworldForger>();
 
-            // Focus the editor onto the object.
-            Selection.activeGameObject = rfObj;
-
             // Make sure that the Ringworld name is unique.
             string objName = "Ringworld";
             if (GameObject.Find(objName) != null)
@@ -44,10 +41,11 @@ namespace ChironPE.Editor
                 new Biome
                 {
                     name = "Metal",
-                    height = 0,
-                    colour = Color.gray
+                    startHeight = 0,
+                    tint = Color.gray
                 }
             };
+            outerLayer.seed = Random.Range(int.MinValue, int.MaxValue);
 
             RingLayer oceanLayer = RingLayerEditor.CreateNewRingLayer();
             oceanLayer.transform.parent = rf.transform;
@@ -61,10 +59,12 @@ namespace ChironPE.Editor
                 new Biome
                 {
                     name = "Ocean",
-                    height = 0,
-                    colour = new Color(0.3176471f, 0.6964f, 0)
+                    tintStrength = 1f,
+                    startHeight = 0,
+                    tint = new Color(0, 0.5f, 1f, 0f)
                 }
             };
+            oceanLayer.seed = Random.Range(int.MinValue, int.MaxValue);
 
             RingLayer terrainLayer = RingLayerEditor.CreateNewRingLayer();
             terrainLayer.transform.parent = rf.transform;
@@ -99,26 +99,36 @@ namespace ChironPE.Editor
                 new Biome
                 {
                     name = "Sand",
-                    height = 0.25f,
-                    colour = new Color(0.8117648f, 0.8196079f, 0.4941177f)
+                    tintStrength = 1f,
+                    startHeight = 0.0f,
+                    blendStrength = 0f,
+                    tint = new Color(0.8117648f, 0.8196079f, 0.4941177f, 0f)
                 },
                 new Biome
                 {
                     name = "Grass",
-                    height = 0.57f,
-                    colour = new Color(0.2470588f, 0.4156863f, 0.07450981f)
+                    tintStrength = 1f,
+                    startHeight = 0.067f,
+                    blendStrength = 0.021f,
+                    tint = new Color(0.2470588f, 0.4156863f, 0.07450981f, 0f)
                 },
                 new Biome
                 {
                     name = "Rock",
-                    height = 0.87f,
-                    colour = new Color(0.2627451f, 0.2078432f, 0.1882353f)
+                    tintStrength = 1f,
+                    startHeight = 0.52f,
+                    blendStrength = 0.0238f,
+                    tint = new Color(0.2627451f, 0.2078432f, 0.1882353f, 0f)
                 }
             };
+            terrainLayer.seed = Random.Range(int.MinValue, int.MaxValue);
             #endregion
 
             rf.OnValidate();
             rf.RefreshRingChunks();
+
+            // Focus the editor onto the object.
+            Selection.activeGameObject = rfObj;
         }
 
         public override void OnInspectorGUI()
@@ -134,8 +144,6 @@ namespace ChironPE.Editor
                 {
                     rf.RefreshRingChunks();
                 }
-
-                rf.info.layers = rf.GetComponentsInChildren<RingLayer>();
             }
             //EditorApplication.QueuePlayerLoopUpdate();
             //SceneView.RepaintAll();

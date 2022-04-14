@@ -33,10 +33,10 @@ namespace ChironPE.Editor
         {
             RingLayer rl = target as RingLayer;
 
-            bool displayDrawButton = !rl.autoRecreate;
+            bool displayDrawButton = !rl.autoRefresh;
             if (DrawDefaultInspector())
             {
-                if (rl.autoRecreate)
+                if (rl.autoRefresh)
                 {
                     rl.RefreshLayerChunks();
                 }

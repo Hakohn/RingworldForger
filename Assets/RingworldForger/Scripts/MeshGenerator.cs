@@ -5,40 +5,6 @@ namespace ChironPE
     // Mainly inspired from (Sebastian Lague, 2016) https://www.youtube.com/watch?v=4RpVBYW1r5M
     public static class MeshGenerator
     {
-        public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
-        {
-            AnimationCurve _heightCurve = new AnimationCurve(heightCurve.keys);
-            Vector2Int mapSize = new Vector2Int(heightMap.GetLength(0), heightMap.GetLength(1));
-            float topLeftX = (mapSize.x - 1) / -2f;
-            float topLeftZ = (mapSize.y - 1) / 2f;
-
-            int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;
-            int verticesPerLine = (mapSize.x - 1) / meshSimplificationIncrement + 1;
-
-            MeshData meshData = new MeshData(mapSize);
-            int vertexIndex = 0;
-
-            for(int y = 0; y < mapSize.y; y += meshSimplificationIncrement)
-            {
-                for(int x = 0; x < mapSize.x; x += meshSimplificationIncrement)
-                {
-                    meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, _heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier, topLeftZ - y);
-                    meshData.uvs[vertexIndex] = new Vector2(x / (float)mapSize.x, y / (float)mapSize.y);
-
-                    // Generating the quads.
-                    if(x < mapSize.x - 1 && y < mapSize.y - 1)
-                    {
-                        meshData.AddTriangle(vertexIndex, vertexIndex + verticesPerLine + 1, vertexIndex + verticesPerLine);
-                        meshData.AddTriangle(vertexIndex + verticesPerLine + 1, vertexIndex, vertexIndex + 1);
-                    }
-
-                    vertexIndex++;
-                }
-            }
-
-            return meshData;
-        }
-
         public static MeshData GenerateRingTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail, float radius, float degrees, bool invertTriangles)
         {
 
@@ -66,7 +32,7 @@ namespace ChironPE
                         y = (radius - vertex.y) * Mathf.Cos(degrees / (RingLayer.mapChunkSize - 1) * vertex.z * Mathf.Deg2Rad),
                         z = (radius - vertex.y) * Mathf.Sin(degrees / (RingLayer.mapChunkSize - 1) * vertex.z * Mathf.Deg2Rad)
                     };
-
+                    
                     meshData.vertices[vertexIndex] = vertex;
                     meshData.uvs[vertexIndex] = new Vector2(x / (float)mapSize.x, y / (float)mapSize.y);
 

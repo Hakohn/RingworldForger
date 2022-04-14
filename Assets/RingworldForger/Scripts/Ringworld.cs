@@ -6,7 +6,7 @@ namespace ChironPE
     [RequireComponent(typeof(BoxCollider)), DisallowMultipleComponent]
     public class Ringworld : MonoBehaviour
     {
-        public float spinningSpeed = 10;
+        public float spinningSpeed = 0.1747257f;
         [SerializeField, DisableField]
         private float gravitationalPullAtRadius = 0;
 
@@ -33,7 +33,7 @@ namespace ChironPE
             UpdateBounds();
         }
 
-        private void OnValidate()
+        public void OnValidate()
         {
             float w = spinningSpeed;
             float r = radius;

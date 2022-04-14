@@ -11,10 +11,12 @@ namespace ChironPE
         private Vector3 localCentre = Vector3.zero;
 
     
-        [Header("Ringworld Generator-controlled")]
+        [Header("Ring Layer-controlled")]
         [DisableField]
         public bool needsCollider = false;
-        //public 
+
+        [SerializeField, HideInInspector]
+        private ShaderData savedShaderData = new ShaderData();
 
         public MeshCollider meshCollider { get; private set; } = null;
 
@@ -56,6 +58,42 @@ namespace ChironPE
             }
         }
 
+        private void OnValidate()
+        {
+            UpdateMeshShader(savedShaderData);
+        }
+
+        public void UpdateMeshShader(ShaderData shaderData)
+        {
+            savedShaderData = shaderData;
+
+            if (Renderer == null) return;
+            if (Renderer.sharedMaterial == null) return;
+
+            // Heights
+            Renderer.sharedMaterial.SetFloat("minHeight", shaderData.height_min);
+            Renderer.sharedMaterial.SetFloat("maxHeight", shaderData.height_max);
+
+            // Ring info
+            Renderer.sharedMaterial.SetVector("ring_centre", shaderData.ring_position);
+            Renderer.sharedMaterial.SetVector("ring_right", shaderData.ring_right);
+            Renderer.sharedMaterial.SetFloat("ring_radius", shaderData.ring_radius);
+            Renderer.sharedMaterial.SetFloat("ring_width", shaderData.ring_width);
+            Renderer.sharedMaterial.SetMatrix("localToWorldMatrix", shaderData.localToWorldMatrix);
+
+            // Biomes
+            Renderer.sharedMaterial.SetInt("biomeCount", shaderData.biomeCount);
+            if(shaderData.biome_tints != null)
+            {
+                Renderer.sharedMaterial.SetTexture("biome_textures", shaderData.biome_textures);
+                Renderer.sharedMaterial.SetFloatArray("biome_textureScales", shaderData.biome_textureScales);
+                Renderer.sharedMaterial.SetColorArray("biome_tints", shaderData.biome_tints);
+                Renderer.sharedMaterial.SetFloatArray("biome_tintStrengths", shaderData.biome_tintStrengths);
+                Renderer.sharedMaterial.SetFloatArray("biome_startHeights", shaderData.biome_startHeights);
+                Renderer.sharedMaterial.SetFloatArray("biome_blendStrengths", shaderData.biome_blendStrengths);
+            }
+        }
+
         public void SetMesh(MeshData meshData, Texture2D texture, Material baseMat, bool needsCollider = false)
         {
             Filter.sharedMesh = meshData.CreateMesh();
@@ -65,6 +103,8 @@ namespace ChironPE
             };
 
             this.needsCollider = needsCollider;
+
+            UpdateMeshShader(savedShaderData);
         }
 
         private void OnDrawGizmos()
@@ -73,6 +113,27 @@ namespace ChironPE
             {
                 Gizmos.DrawWireSphere(Centre, 5f);
             }
+        }
+
+        public struct ShaderData
+        {
+            // Heights
+            public float height_min;
+            public float height_max;
+            // Ring
+            public Vector3 ring_position;
+            public Vector3 ring_right;
+            public float ring_radius;
+            public float ring_width;
+            public Matrix4x4 localToWorldMatrix;
+            // Biomes
+            public int biomeCount;
+            public Texture2DArray biome_textures;
+            public float[] biome_textureScales;
+            public Color[] biome_tints;
+            public float[] biome_tintStrengths;
+            public float[] biome_startHeights;
+            public float[] biome_blendStrengths;
         }
     }
 }
