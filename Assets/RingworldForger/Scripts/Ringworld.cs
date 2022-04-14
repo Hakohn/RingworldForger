@@ -3,22 +3,21 @@ using UnityEngine;
 
 namespace ChironPE
 {
-    [RequireComponent(typeof(BoxCollider))]
+    [RequireComponent(typeof(BoxCollider)), DisallowMultipleComponent]
     public class Ringworld : MonoBehaviour
     {
         public float spinningSpeed = 10;
-        [SerializeField]
+        [SerializeField, DisableField]
         private float gravitationalPullAtRadius = 0;
 
 
         [HideInInspector]
         public BoxCollider trigger = null;
-
         /// <summary> DO NOT CHANGE THE VALUE OF THIS VARIABLE. The radius of the ring, as given by RingworldForger on creation. </summary>
-        //[HideInInspector]
+        [HideInInspector]
         public float radius = 0.0f;
         /// <summary> DO NOT CHANGE THE VALUE OF THIS VARIABLE. The radius of the ring, as given by RingworldForger on creation. </summary>
-        //[HideInInspector]
+        [HideInInspector]
         public float width = 0.0f;
         public float diameter { get; private set; } = 0.0f;
         public float halfWidth { get; private set; } = 0.0f;
@@ -54,7 +53,7 @@ namespace ChironPE
             trigger = GetComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.center = new Vector3(0, 0, 0);
-            trigger.size = new Vector3(width, diameter, diameter);
+            trigger.size = new Vector3(width, diameter, diameter) + Vector3.one * 2;
         }
 
         private void FixedUpdate()

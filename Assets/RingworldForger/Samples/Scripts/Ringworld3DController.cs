@@ -174,7 +174,15 @@ namespace ChironPE
         private void UpdateGroundCheck()
         {
             // Ground Check
-            isGrounded = Physics.CheckSphere(cb.rb.position, groundCheckRadius, groundMask, QueryTriggerInteraction.Ignore);
+            bool touchedObject = false;
+            foreach(Collider collider in Physics.OverlapSphere(cb.rb.position, groundCheckRadius, groundMask, QueryTriggerInteraction.Ignore))
+            {
+                if (collider.attachedRigidbody != null && collider.attachedRigidbody == cb.rb) continue;
+
+                touchedObject = true;
+                break;
+            }
+            isGrounded = touchedObject;
         }
 
 
