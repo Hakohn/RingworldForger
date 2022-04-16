@@ -42,6 +42,10 @@ namespace ChironPE
         public Material baseMaterial = null;
         [Tooltip("All the textures assigned to biomes MUST be of this exact size.")]
         public int textureSize = 512;
+        [Tooltip("When pressing the spawn vegetation button, this is the maximum amount of objects that can be spawned. Make sure to have at least one biome with a vegetation table attached to see any results.")]
+        public int vegetationSpawnLimit = 100;
+        [Tooltip("On what Unity layers can the vegetation be spawned on?")]
+        public LayerMask vegetationGeneratorLayers = 1;
         [Tooltip("Height levels, to be precise. The terrain changes its colours based on these biomes. Make sure to keep their heights sorted.")]
         [FormerlySerializedAs("regions")]
         public Biome[] biomes = new Biome[1];
@@ -108,21 +112,9 @@ namespace ChironPE
             }
 
             textureSize = Mathf.Clamp(textureSize, 1, textureSize);
+            vegetationSpawnLimit = Mathf.Clamp(vegetationSpawnLimit, 1, vegetationSpawnLimit);
 
             RefreshBiomeData();
-
-//#if UNITY_EDITOR
-//            if (!isSubscribedToSceneSave)
-//            {
-//                UnityEditor.SceneManagement.EditorSceneManager.sceneSaved += OnUnitySceneSave;
-//                isSubscribedToSceneSave = true;
-//            }
-//            if (!isSubscribedToApplicationUpdate)
-//            {
-//                UnityEditor.EditorApplication.update += OnUnityApplicationUpdate;
-//                isSubscribedToApplicationUpdate = true;
-//            }
-//#endif
         }
 
         private void RefreshBiomeData()
@@ -175,36 +167,6 @@ namespace ChironPE
             biome_textures.Apply();
         }
 
-//#if UNITY_EDITOR
-//        private bool isSubscribedToSceneSave = false;
-//        private bool isSubscribedToApplicationUpdate = false;
-
-//        private void OnUnitySceneSave(UnityEngine.SceneManagement.Scene scene)
-//        {
-//            if (isSubscribedToSceneSave)
-//            {
-//                UnityEditor.SceneManagement.EditorSceneManager.sceneSaved -= OnUnitySceneSave;
-//                isSubscribedToSceneSave = false;
-//            }
-//            UpdateShaders();
-//        }
-//        private void OnUnityApplicationUpdate()
-//        {
-//            if(isSubscribedToApplicationUpdate)
-//            {
-//                UnityEditor.EditorApplication.update -= OnUnityApplicationUpdate;
-//                isSubscribedToApplicationUpdate = false;
-//            }
-//            UpdateShaders();
-//        }
-//#endif
-
-        //private void Awake()
-        //{
-        //    // Shouldn't exist at runtime.
-        //    Destroy(this);
-        //    return;
-        //}
         public void UpdateShaders()
         {
             RingChunkMesh.ShaderData shaderData = new RingChunkMesh.ShaderData
@@ -294,25 +256,98 @@ namespace ChironPE
                     chunk.transform.localPosition = localPos;
                     chunk.transform.localRotation = Quaternion.Euler(degPerChunk * y, 0, 0) * transform.localRotation;
 
-                    //// Generate vegetation.
-                    //for(int vegX = 0; vegX < mapChunkSize; vegX++)
-                    //{
-                    //    for (int vegY = 0; vegY < mapChunkSize; vegY++)
-                    //    {
-                    //        if(mapData.vegetationMap[vegX, vegY] != null)
-                    //        {
-                    //            GameObject obj = Instantiate(mapData.vegetationMap[vegX, vegY]);
-                    //            obj.transform.parent = chunk.transform;
-                    //            obj.transform.localPosition = meshData.vertices[vegY * mapChunkSize + vegX];
-                    //            obj.transform.up = (transform.position - obj.transform.position).normalized;
-                    //        }
-                    //    }
-                    //}
+                    chunk.OnGeneration();
                 }
             }
 
             // This will update the shader data.
             UpdateShaders();
+        }
+
+        public void RefreshVegetation()
+        {
+            // Clearing existing vegetation, if applicable.
+            ClearVegetation();
+
+            for(int i = 0; i < vegetationSpawnLimit; i++)
+            {
+                Ray ray = new Ray
+                {
+                    // Choosing a random start point along the width of the ring.
+                    origin = transform.position + transform.right * Random.Range(-width / 2f, width / 2f),
+                    // Choosing a random world direction for the ray.
+                    direction = transform.TransformDirection(new Vector3(0, Random.Range(-1f, 1f), Random.Range(-1f, 1f))),
+                };
+                bool successful = Physics.Raycast(ray, out RaycastHit hitInfo, radius, vegetationGeneratorLayers, QueryTriggerInteraction.Ignore);
+
+                // Was anything hit?
+                if (!successful) continue;
+                // Was a chunk's terrain hit?
+                if (!hitInfo.collider.gameObject.TryGetComponent(out RingChunkMesh chunk)) continue;
+
+                // A chunk was hit, so now it is time to check what vegetation needs to be spawned.
+                // First, the biome needs to be found, and it will be done through hit info point height detection.
+                float height = radius - hitInfo.distance;
+                float heightPercent = height.Remap(MinHeight, MaxHeight, 0f, 1f);
+                Biome biome = null;
+                for(int j = biomes.Length - 1; j >= 0; j--)
+                {
+                    if(heightPercent >= biomes[j].startHeight)
+                    {
+                        biome = biomes[j];
+                        break;
+                    }
+                }
+
+                // No biome was found (This means something must be wrong...)
+                if (biome == null) 
+                {
+                    Debug.LogWarning($"No biome was found with a start height lower than {heightPercent}%, which makes the vegetation spawning invalid. Check the biomes settings and try again.");
+                    continue; 
+                }
+
+                // The biome was found but has no vegetation table.
+                if (biome.vegetationTable == null) continue;
+
+                GameObject vegetationPrefab = biome.vegetationTable.GenerateLoot();
+                // The loot table was quite unlucky.
+                if (vegetationPrefab == null) continue;
+
+                // Finding the parent for the new vegetation object.
+                if(chunk.vegetationParent == null)
+                {
+                    GameObject vegParent = new GameObject("Vegetation");
+                    vegParent.transform.parent = chunk.transform;
+                    vegParent.transform.localPosition = Vector3.zero;
+                    vegParent.transform.localRotation = Quaternion.identity;
+                    vegParent.transform.localScale = Vector3.one;
+                    chunk.vegetationParent = vegParent.transform;
+                }
+
+                // The desired vegetation was found, and will now be spawned.
+                GameObject spawnedVegetation = Instantiate(vegetationPrefab,
+                    hitInfo.point,
+                    Quaternion.identity,
+                    chunk.vegetationParent
+                );
+                // Rotating it accordingly.
+                spawnedVegetation.transform.up = hitInfo.normal;
+                spawnedVegetation.transform.Rotate(Vector3.up, Random.Range(0, 360), Space.Self);
+                spawnedVegetation.name = spawnedVegetation.name.Replace("(Clone)", "");
+                chunk.vegetationObjects.Add(spawnedVegetation);
+            }
+        }
+
+        public void ClearVegetation()
+        {
+            for (int y = 0; y < chunkCount.y; y++)
+            {
+                for (int x = 0; x < chunkCount.x; x++)
+                {
+                    int chunkIndex = y * chunkCount.x + x;
+                    ringChunkMeshes[chunkIndex].ClearVegetation();
+                }
+            }
         }
 
         public MapData GenerateMapData(Vector2 centre)
@@ -346,19 +381,30 @@ namespace ChironPE
     [System.Serializable]
     public class Biome
     {
+        [Tooltip("The name of the biome. Used only for display purposes.")]
         public string name;
-
+        [Space]
+        [Tooltip("The texture applied to the terrain. Can be left empty.")]
         public Texture2D texture = null;
+        [Tooltip("The scale of the texture (how big or how small it is displayed on 3D models.")]
         public float textureScale = 1f;
+        [Space]
+        [Tooltip("The colour / tint applied to the terrain.")]
         [FormerlySerializedAs("colour")]
         public Color tint;
+        [Tooltip("The strength of the applied tint. If set to one, the texture (if any) will be invisible, and only the colour will be displayed. If set to zero, only the texture is displayed. If somewhere in between, the texture will have its colour tinted by chosen tint colour.")]
         [Range(0f, 1f)]
         public float tintStrength = 0.5f;
-
+        [Space]
+        [Tooltip("The height from which this biome will began being used.")]
         [Range(0f, 1f), FormerlySerializedAs("height")]
         public float startHeight = 0f;
+        [Tooltip("How strong will the blending go between this and the other biomes? Fades in/out the textures / tint.")]
         [Range(0f, 1f), FormerlySerializedAs("blend")]
         public float blendStrength = 0.5f;
+        [Space]
+        [Tooltip("The table containing all the vegetation that can spawn here. It can be left empty, if no vegetation is desired.")]
+        public SelectionTableSO vegetationTable = null;
     }
 
     public struct MapData

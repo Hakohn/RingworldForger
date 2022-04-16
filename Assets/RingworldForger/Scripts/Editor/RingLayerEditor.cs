@@ -8,12 +8,7 @@ namespace ChironPE.Editor
     public class RingLayerEditor : UnityEditor.Editor
     {
         [MenuItem("Ringworld Forger/Create/New Ring Layer")]
-        [MenuItem("GameObject/3D Object/Ring Layer")]
-        private static void CreateNewRingLayerEditor()
-        {
-            CreateNewRingLayer();
-        }
-
+        [MenuItem("GameObject/3D Object/Ringworld/Ring Layer")]
         public static RingLayer CreateNewRingLayer()
         {
             // Creating the new game object with the necessary components onto it.
@@ -44,11 +39,22 @@ namespace ChironPE.Editor
 
             if (displayDrawButton/* && !rl.isRingworldForgerControlled*/)
             {
-                if (GUILayout.Button("Refresh"))
+                if (GUILayout.Button("Refresh Layer Chunks"))
                 {
                     rl.RefreshLayerChunks();
                 }
             }
+
+            GUILayout.BeginHorizontal();
+            if(GUILayout.Button("(Re)Spawn Vegetation"))
+            {
+                rl.RefreshVegetation();
+            }
+            if(GUILayout.Button("Clear Vegetation"))
+            {
+                rl.ClearVegetation();
+            }
+            GUILayout.EndHorizontal();
 
             //EditorApplication.QueuePlayerLoopUpdate();
             //SceneView.RepaintAll();

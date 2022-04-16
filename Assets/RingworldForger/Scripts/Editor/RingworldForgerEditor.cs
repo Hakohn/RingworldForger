@@ -8,7 +8,7 @@ namespace ChironPE.Editor
     public class RingworldForgerEditor : UnityEditor.Editor
     {
         [MenuItem("Ringworld Forger/Create/New Ringworld")]
-        [MenuItem("GameObject/3D Object/Ringworld")]
+        [MenuItem("GameObject/3D Object/Ringworld/Ringworld")]
         private static void CreateNewRingworldForger()
         {
             // Creating the new game object with the necessary components onto it.

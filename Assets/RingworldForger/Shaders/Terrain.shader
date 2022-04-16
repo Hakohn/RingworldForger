@@ -69,7 +69,7 @@ Shader "Custom/Terrain"
             float projectionLength = dot(ring_right, difference);
             float3 localRingCentre = ring_centre - ring_right * projectionLength;
             float3 dirToLocalCentre = normalize(localRingCentre - IN.worldPos);
-            float3 lowestPoint = localRingCentre + -dirToLocalCentre * (ring_radius - minHeight);
+            float3 lowestPoint = localRingCentre + -dirToLocalCentre * ring_radius;
             // Calculating the height and height percentage.
             float height = length(IN.worldPos - lowestPoint);
             float heightPercent = InverseLerp(minHeight, maxHeight, height);

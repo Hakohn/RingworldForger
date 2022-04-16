@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ChironPE
@@ -10,6 +11,10 @@ namespace ChironPE
         private MeshRenderer meshRenderer = null;
         private Vector3 localCentre = Vector3.zero;
 
+        [HideInInspector]
+        public List<GameObject> vegetationObjects = new List<GameObject>();
+        [HideInInspector]
+        public Transform vegetationParent = null;
     
         [Header("Ring Layer-controlled")]
         [DisableField]
@@ -46,21 +51,24 @@ namespace ChironPE
         private void Awake()
         {
             localCentre = (Filter.mesh.vertices[0] + Filter.mesh.vertices[Filter.mesh.vertices.Length - 1]) / 2f;
+        }
 
-            if(needsCollider)
+        private void OnValidate()
+        {
+            UpdateMeshShader(savedShaderData);
+        }
+
+        public void OnGeneration()
+        {
+            if (needsCollider)
             {
-                if((meshCollider = GetComponent<MeshCollider>()) == null)
+                if ((meshCollider = GetComponent<MeshCollider>()) == null)
                 {
                     meshCollider = gameObject.AddComponent<MeshCollider>();
                 }
 
                 meshCollider.sharedMesh = Filter.sharedMesh;
             }
-        }
-
-        private void OnValidate()
-        {
-            UpdateMeshShader(savedShaderData);
         }
 
         public void UpdateMeshShader(ShaderData shaderData)
@@ -107,6 +115,23 @@ namespace ChironPE
             UpdateMeshShader(savedShaderData);
         }
 
+        public void ClearVegetation()
+        {
+            for(int i = 0; i < vegetationObjects.Count; i++)
+            {
+                if(vegetationObjects[i] == null) continue;
+
+                if (Application.isPlaying)
+                {
+                    Destroy(vegetationObjects[i]);
+                }
+                else
+                {
+                    DestroyImmediate(vegetationObjects[i]);
+                }
+            }
+            vegetationObjects.Clear();
+        }
         private void OnDrawGizmos()
         {
             if(Application.isPlaying)
