@@ -46,6 +46,7 @@ namespace ChironPE.Editor
                 }
             };
             outerLayer.seed = Random.Range(int.MinValue, int.MaxValue);
+            outerLayer.generateColliders = false;
 
             RingLayer oceanLayer = RingLayerEditor.CreateNewRingLayer();
             oceanLayer.transform.parent = rf.transform;
@@ -65,6 +66,7 @@ namespace ChironPE.Editor
                 }
             };
             oceanLayer.seed = Random.Range(int.MinValue, int.MaxValue);
+            oceanLayer.generateColliders = false;
 
             RingLayer terrainLayer = RingLayerEditor.CreateNewRingLayer();
             terrainLayer.transform.parent = rf.transform;
@@ -122,6 +124,7 @@ namespace ChironPE.Editor
                 }
             };
             terrainLayer.seed = Random.Range(int.MinValue, int.MaxValue);
+            terrainLayer.generateColliders = true;
             #endregion
 
             rf.OnValidate();

@@ -37,7 +37,7 @@ namespace ChironPE
         [Tooltip("The button used for jumping. The button's settings can be changed from Unity's panel ProjectSettings/Input.")]
         public string jumpButton = "Jump";
         [Tooltip("The button used for sprinting and tactical sprinting. The button's settings can be changed from Unity's panel ProjectSettings/Input.")]
-        public string sprintButton = "Sprint";
+        public string sprintButton = "Fire3";
         [Space]
         [Tooltip("The mouse look sensitivity.")]
         public float sensitivity = 300;

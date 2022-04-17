@@ -43,7 +43,7 @@ namespace ChironPE
         [Tooltip("All the textures assigned to biomes MUST be of this exact size.")]
         public int textureSize = 512;
         [Tooltip("When pressing the spawn vegetation button, this is the maximum amount of objects that can be spawned. Make sure to have at least one biome with a vegetation table attached to see any results.")]
-        public int vegetationSpawnLimit = 100;
+        public int vegetationSpawnLimit = 2500;
         [Tooltip("On what Unity layers can the vegetation be spawned on?")]
         public LayerMask vegetationGeneratorLayers = 1;
         [Tooltip("Height levels, to be precise. The terrain changes its colours based on these biomes. Make sure to keep their heights sorted.")]
