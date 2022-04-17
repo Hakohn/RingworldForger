@@ -6,7 +6,9 @@ namespace ChironPE
     [RequireComponent(typeof(BoxCollider)), DisallowMultipleComponent]
     public class Ringworld : MonoBehaviour
     {
+        [Tooltip("The ring's rotation speed, in degrees per second. The higher the value, the greater the gravitational force. And likeliness of nausea...")]
         public float spinningSpeed = 0.1747257f;
+        [Tooltip("The estimated gravitational force exerted on an object found at 'radius' distance from the ring's centre.")]
         [SerializeField, DisableField]
         private float gravitationalPullAtRadius = 0;
 
@@ -23,7 +25,7 @@ namespace ChironPE
         public float halfWidth { get; private set; } = 0.0f;
         public Vector3 Centre => transform.position;
 
-        public List<GameObject> capturedGameObjects = new List<GameObject>();
+        public readonly List<GameObject> capturedGameObjects = new List<GameObject>();
 
         private void Awake()
         {

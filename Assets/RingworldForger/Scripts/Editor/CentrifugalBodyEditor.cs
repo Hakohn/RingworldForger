@@ -27,6 +27,7 @@ namespace ChironPE.Editor
 
         public override void OnInspectorGUI()
         {
+            base.OnInspectorGUI();
             CentrifugalBody rl = target as CentrifugalBody;
 
             if (serializedObject.hasModifiedProperties)

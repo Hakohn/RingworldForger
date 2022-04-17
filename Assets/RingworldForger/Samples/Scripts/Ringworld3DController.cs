@@ -8,29 +8,43 @@ namespace ChironPE
     public class Ringworld3DController : MonoBehaviour
     {
         [Header("Movement")]
+        [Tooltip("The movement speed of the character while walking.")]
         public float movementSpeed = 2;
+        [Tooltip("The acceleration speed of the character. For best results, keep this around 10 times larger than the movement speed.")]
         public float accelerationSpeed = 20;
+        [Tooltip("While sprinting (tapping the sprint button once while moving forward), how quicker will the movement speed and acceleration in comparison to the walking speed?")]
         public float sprintSpeedMultiplier = 3f;
+        [Tooltip("While tactical sprinting (tapping the sprint button twice while moving forward), how quicker will the movement speed and acceleration in comparison to the walking speed?")]
         public float tacticalSprintSpeedMultiplier = 4f;
-        public float airSpeedMultiplier = 0.5f;
-        public float sensitivity = 600;
+        [Tooltip("While not touching the ground, how quicker will the movement in comparison to the walking speed?")]
+        public float airSpeedMultiplier = 1.0f;
+        [Tooltip("The impulse force applied to the character when pressing the jump button while on ground.")]
         public float jumpForce = 500;
+        [Tooltip("What object layers are considered ground by this character?")]
         public LayerMask groundMask = 1;
+        [Tooltip("When checking for ground touching, this character is doing a sphere check at its feet. What will the radius be of that sphere? The higher the value, the less likely it is to be floating randomly, but the accuracy is also going to decrease.")]
         public float groundCheckRadius = 0.25f;
         private Vector3 movementVelocity = Vector3.zero;
+        private bool isTacticalSprinting = false;
+        private bool isSprinting = false;
+        private bool isGrounded = false;
 
-        [Header("Keybinds")]
+        [Header("Input")]
+        [Tooltip("The axis used for vertical (forward and backward) movement. The axis' settings can be changed from Unity's panel ProjectSettings/Input.")]
         public string movementVerticalAxis = "Vertical";
+        [Tooltip("The axis used for horizontal (left and right) movement. The axis' settings can be changed from Unity's panel ProjectSettings/Input.")]
         public string movementHorizontalAxis = "Horizontal";
-        public string jump = "Jump";
-        public string sprint = "Sprint";
+        [Tooltip("The button used for jumping. The button's settings can be changed from Unity's panel ProjectSettings/Input.")]
+        public string jumpButton = "Jump";
+        [Tooltip("The button used for sprinting and tactical sprinting. The button's settings can be changed from Unity's panel ProjectSettings/Input.")]
+        public string sprintButton = "Sprint";
+        [Space]
+        [Tooltip("The mouse look sensitivity.")]
+        public float sensitivity = 300;
+        [Tooltip("The axis used for horizontal (left and right) look rotation. The axis' settings can be changed from Unity's panel ProjectSettings/Input.")]
         public string mouseXAxis = "Mouse X";
+        [Tooltip("The axis used for vertical (up and down) look rotation. The axis' settings can be changed from Unity's panel ProjectSettings/Input.")]
         public string mouseYAxis = "Mouse Y";
-
-        [HideInInspector]
-        public CentrifugalBody cb = null;
-        private Ringworld rg = null;
-
         private Vector2 moveInput = default;
         private Vector2 lookInput = default;
         private const float buttonCooldown = 0.1f;
@@ -38,22 +52,29 @@ namespace ChironPE
         private float pressedSprintTimer = 0.0f;
         private bool pressedJump = false;
         private float pressedJumpTimer = 0.0f;
-        private bool isTacticalSprinting = false;
-        private bool isSprinting = false;
-        private bool isGrounded = false;
+
+        [HideInInspector]
+        public CentrifugalBody cb = null;
+        private Ringworld rg = null;
 
         [Header("Camera")]
+        [Tooltip("The camera used to view this character. It should be attached to an empty object, child of the main character.")]
         public new Camera camera = null;
-        public Vector3 offset = new Vector3(0, 2.5f, -5.5f);
+        [Tooltip("The offset of the camera, in comparison to the character.")]
+        public Vector3 offset = new Vector3(0.5f, 0f, -2.0f);
+        [Tooltip("The maximum vertical look rotation angle of the camera.")]
         public float maxVerticalLookAngle = 80f;
-        public float minVerticalLookAngle = -20f;
+        [Tooltip("The maximum vertical look rotation angle of the camera.")]
+        public float minVerticalLookAngle = -80f;
         private float verticalLookAngle = 0;
         [SerializeField, HideInInspector]
         private Transform cameraLook = null;
 
         [Header("Animation")]
+        [Tooltip("The mesh's animator. Should not be left empty.")]
         public Animator animator = null;
-        public float animationLerp = 0.1f;
+        [Tooltip("The lerping used for inputting float values to the animator, such as the character's velocity. For smooth transitions, keep this higher.")]
+        public float animationLerp = 20f;
 
         private void Awake()
         {
@@ -110,7 +131,7 @@ namespace ChironPE
             }
             else
             {
-                pressedSprint = Input.GetButtonDown(sprint);
+                pressedSprint = Input.GetButtonDown(sprintButton);
                 if (pressedSprint) pressedSprintTimer = 0f;
             }
 
@@ -120,7 +141,7 @@ namespace ChironPE
             }
             else
             {
-                pressedJump = Input.GetButtonDown(jump);
+                pressedJump = Input.GetButtonDown(jumpButton);
                 if (pressedJump) pressedJumpTimer = 0f;
             }
 
